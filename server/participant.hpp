@@ -3,12 +3,15 @@
 
 #include <QObject>
 #include <QHostAddress>
+#include <QTime>
 #include <vector>
 
 class Participant : public QObject {
     Q_OBJECT
 
 public:
+
+	QTime lastSeen;
 
 	QHostAddress host;
 	quint16 port;

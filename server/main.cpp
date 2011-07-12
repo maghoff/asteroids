@@ -10,7 +10,7 @@ int main(int argc, char** argv) {
 
 	Game game;
 
-	qDebug() << "Ready...\n";
+	qDebug() << "Ready...";
 
 	return app.exec();
 }

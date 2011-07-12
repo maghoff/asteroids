@@ -14,7 +14,7 @@ class Game : public QObject {
 
 	quint32 gameTicks;
 	QTime gameTime;
-	QTimer timer;
+	QTimer timer, gcTimer;
 
 	QUdpSocket s;
 	QHash<QString, Participant*> p;
@@ -34,6 +34,7 @@ public slots:
 private slots:
 	void incoming();
 	void timerSlot();
+	void disconnectStaleClients();
 };
 
 #endif // GAME_HPP

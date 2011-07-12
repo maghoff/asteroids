@@ -26,7 +26,11 @@ const quint8 DOWN_BITMASK = 0x02;
 const quint8 LEFT_BITMASK = 0x04;
 const quint8 RIGHT_BITMASK = 0x08;
 
+const quint8 MSG_CONTROL_STATE = 0x02;
+
 void Participant::incoming(const std::vector<char>& data) {
+	lastSeen = QTime::currentTime();
+
 	QByteArray ba(data.data(), data.size());
 	QDataStream ds(&ba, QIODevice::ReadOnly);
 
@@ -38,14 +42,15 @@ void Participant::incoming(const std::vector<char>& data) {
 		quint32 time;
 		quint8 controlBits;
 
-		ds >> time >> controlBits;
+		ds >> /*time >>*/ controlBits;
 
 		bool up = controlBits & UP_BITMASK;
 		bool down = controlBits & DOWN_BITMASK;
 		bool left = controlBits & LEFT_BITMASK;
 		bool right = controlBits & RIGHT_BITMASK;
 
-		dang = (left ? 0.1 : 0) + (right ? -0.1 : 0);
+		dang = (left ? 1 : 0) + (right ? -1 : 0);
+		dang *= 0.01;
 		engine = up;
 	}
 }
@@ -57,7 +62,7 @@ void Participant::step() {
 		dy += acc * sin(ang);
 	}
 
-	const double damp = 0.7;
+	const double damp = 0.8;
 	dx *= damp;
 	dy *= damp;
 
