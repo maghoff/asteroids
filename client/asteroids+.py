@@ -6,6 +6,7 @@ import struct
 import sys
 import time
 from math import sin, cos
+from vec2d import Vec2d
 
 
 ### pygame
@@ -48,12 +49,22 @@ def draw():
 	global objects
 	screen.fill((0, 0, 0))
 	for obj in objects:
-		x = obj['x'] + 50
-		y = -obj['y'] + 50
+		pos = Vec2d(obj['x'] + 50, -obj['y'] + 50)
 
-		pygame.draw.circle(screen, (obj['r'], obj['g'], obj['b']), (x, y), 5)
-		pygame.draw.circle(screen, (255, 255, 255), (x, y), 5, 1)
-		pygame.draw.line  (screen, (255, 255, 255), (x, y), (x + cos(obj['ang']) * 10, y - sin(obj['ang']) * 10))
+		fwd = Vec2d( cos(obj['ang']), -sin(obj['ang'])) * 10
+		rgt = Vec2d(-sin(obj['ang']), -cos(obj['ang'])) * 7
+
+		color = (obj['r'], obj['g'], obj['b'])
+
+		pointlist = [
+			pos + fwd,
+			pos + rgt - fwd,
+			pos - 0.5 * fwd,
+			pos - rgt - fwd,
+		]
+
+		pygame.draw.polygon(screen, color, pointlist)
+
 	pygame.display.flip()
 
 def ping():

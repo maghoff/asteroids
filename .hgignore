@@ -1,3 +1,4 @@
 syntax:glob
 server-build-*
 *.pro.user
+*.pyc
