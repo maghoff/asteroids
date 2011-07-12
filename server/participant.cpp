@@ -50,19 +50,30 @@ void Participant::incoming(const std::vector<char>& data) {
 		bool right = controlBits & RIGHT_BITMASK;
 
 		dang = (left ? 1 : 0) + (right ? -1 : 0);
-		dang *= 0.01;
+		dang *= 0.005;
 		engine = up;
+
+		if (down) {
+			dx = dy = 0;
+		}
 	}
 }
 
 void Participant::step() {
 	if (engine) {
-		const double acc = 0.1;
+		const double acc = 0.001;
 		dx += acc * cos(ang);
 		dy += acc * sin(ang);
+
+		const double speed = sqrt(dx*dx + dy*dy);
+		const double maxSpeed = 0.3;
+		if (speed > maxSpeed) {
+			dx *= maxSpeed / speed;
+			dy *= maxSpeed / speed;
+		}
 	}
 
-	const double damp = 0.8;
+	const double damp = 0.999;
 	dx *= damp;
 	dy *= damp;
 
