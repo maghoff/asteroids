@@ -51,7 +51,7 @@ void Participant::incoming(const std::vector<char>& data) {
 
 		dang = (left ? 1 : 0) + (right ? -1 : 0);
 		dang *= 0.005;
-		engine = up;
+		engine = up && !down;
 
 		if (down) {
 			dx = dy = 0;
