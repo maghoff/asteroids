@@ -93,7 +93,7 @@ def draw(t):
 	println([
 		'Objects: %d' % len(game.objects),
 		'Base delta: %.1f' % (game.base_delta),
-		'Min delta: %.1f' % (game.max_delta - game.base_delta),
+		'Min delta: %.1f' % (game.min_delta - game.base_delta),
 		'Max delta: %.1f' % (game.max_delta - game.base_delta),
 		'Avg delta: %.1f' % (game.avg_delta - game.base_delta),
 	])
