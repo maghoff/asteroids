@@ -5,6 +5,7 @@ from socket import AF_INET, SOCK_DGRAM
 import struct
 import sys
 import time
+import random
 from math import sin, cos, isnan
 from vec2d import Vec2d
 
@@ -52,6 +53,9 @@ class game:
 	max_delta = 0
 	base_delta = float('nan')
 	discard_messages = False
+	stars = [(random.randint(0, screen_size[0] - 1),
+	          random.randint(0, screen_size[1] - 1),
+	          255 * (random.random() ** 2.2)) for i in xrange(250)]
 
 font = pygame.font.Font(None, 16)
 
@@ -66,6 +70,10 @@ class status_flags:
 
 def draw(t):
 	screen.fill((0, 0, 0))
+
+	for x, y, lum in game.stars:
+		screen.fill((lum, lum, lum), (x, y, 1, 1))
+
 	for obj in game.objects:
 		dt = t - game.t0
 		if dt < 0:
@@ -125,6 +133,7 @@ def draw(t):
 		def draw_shape(shape, origo, space, color):
 			rebase = lambda x, y: (space[0][0] * x + space[1][0] * y, space[0][1] * x + space[1][1] * y)
 			pygame.draw.polygon(screen, color, [origo + rebase(x, y) for x, y in shape])
+			#pygame.draw.aalines(screen, color, True, [origo + rebase(x, y) for x, y in shape])
 
 		draw_shape(ship_shape, pos, space, color)
 
