@@ -72,11 +72,45 @@ def draw(t):
 			print 'Time since t0 > 0! (dt = %d)' % dt
 			dt = 0
 
+		engine_on = bool(obj['status'] & status_flags.engine)
 		pos_at_t0 = Vec2d(obj['x'] + 50, -obj['y'] + 50)
 		ang_at_t0 = obj['ang']
+		vel_at_t0 = Vec2d(obj['dx'], -obj['dy'])
+		dang      = obj['dang']
 
-		pos = pos_at_t0 + Vec2d(obj['dx'], -obj['dy']) * dt
-		ang = ang_at_t0 + obj['dang'] * dt
+		def integrator_1():
+			pos = pos_at_t0 + vel_at_t0 * dt
+			ang = ang_at_t0 + dang * dt
+			return pos, ang
+
+		def integrator_2():
+			pos = pos_at_t0
+			ang = ang_at_t0
+			vel = vel_at_t0
+
+			if dt > 1000:
+				print 'Bailing out from integration -- too far ahead'
+				return pos, ang
+
+			for i in xrange(dt):
+				if engine_on:
+					vel += 0.001 * Vec2d(cos(ang), -sin(ang))
+					speed = vel.get_length()
+					maxSpeed = 0.3
+					if speed > maxSpeed:
+						vel *= maxSpeed / speed
+
+				damp = 0.999
+				vel *= damp
+
+				pos += vel
+				ang += dang
+			
+			return pos, ang
+
+
+		pos, ang = integrator_2()
+
 
 		space = (
 			Vec2d(-sin(ang), -cos(ang)) * 3, # x axis / right
@@ -94,10 +128,9 @@ def draw(t):
 
 		draw_shape(ship_shape, pos, space, color)
 
-		if obj['status'] & status_flags.engine:
-			r = 255 * ((t / 20) % 2)
-			y = r * ((t / 300) % 2)
-			draw_shape(burst_shape, pos, space, (r,y,0))
+		if engine_on:
+			y = 255 * ((t / 300) % 2)
+			draw_shape(burst_shape, pos, space, (255,y,0))
 
 	def println(lines):
 		for i,text in enumerate(lines):
