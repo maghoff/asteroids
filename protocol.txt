@@ -25,6 +25,7 @@ float: 32 bits IEEE 754
       - 1 bit break
       - 1 bit turn left
       - 1 bit turn right
+      - 1 bit fire
 
 17 = ping
     (reply is the same message)

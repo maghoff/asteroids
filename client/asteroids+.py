@@ -125,6 +125,7 @@ def status():
 	if game.keystate.get(K_DOWN, False):  keysdown += 2
 	if game.keystate.get(K_LEFT, False):  keysdown += 4
 	if game.keystate.get(K_RIGHT, False): keysdown += 8
+	if game.keystate.get(K_SPACE, False): keysdown += 16
 
 	return struct.pack('!BB', msg_keysdown, keysdown)
 
