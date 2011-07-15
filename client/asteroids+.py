@@ -15,12 +15,25 @@ from vec2d import Vec2d
 import pygame
 from pygame.locals import *
 pygame.init()
-#screen = pygame.display.set_mode((0,0), FULLSCREEN)
-screen = pygame.display.set_mode((640, 480))
-screen_size = screen.get_size()
-pygame.display.set_caption('Asteroids+')
-#pygame.mouse.set_visible(0)
 
+def set_screen_mode(fullscreen = False):
+	global screen_size, screen, is_fullscreen
+
+	is_fullscreen = fullscreen
+
+	if fullscreen:
+		modes = pygame.display.list_modes()
+		w, h = max(modes, key=lambda x: x[0]*x[1])
+		screen = pygame.display.set_mode((w,h), FULLSCREEN)
+	else:
+		aspect = 16 / 10.
+		screen = pygame.display.set_mode((640, int(640 / aspect)))
+
+	screen_size = screen.get_size()
+	#pygame.mouse.set_visible(0)
+
+set_screen_mode(True)
+pygame.display.set_caption('Asteroids+')
 
 ### protocol
 
@@ -71,8 +84,13 @@ class status_flags:
 def draw(t):
 	screen.fill((0, 0, 0))
 
+	def screen_coord(pos):
+		x, y = pos
+		return (x / 640. * screen_size[0], (1 - y / 400.) * screen_size[1])
+
 	for x, y, lum in game.stars:
-		screen.fill((lum, lum, lum), (x, y, 1, 1))
+		xs, ys = screen_coord((x, y))
+		screen.fill((lum, lum, lum), (xs, ys, 1, 1))
 
 	for obj in game.objects:
 		dt = t - game.t0
@@ -81,9 +99,9 @@ def draw(t):
 			dt = 0
 
 		engine_on = bool(obj['status'] & status_flags.engine)
-		pos_at_t0 = Vec2d(obj['x'] + 50, -obj['y'] + 50)
+		pos_at_t0 = Vec2d(obj['x'] + 50, obj['y'] + 50)
 		ang_at_t0 = obj['ang']
-		vel_at_t0 = Vec2d(obj['dx'], -obj['dy'])
+		vel_at_t0 = Vec2d(obj['dx'], obj['dy'])
 		dang      = obj['dang']
 
 		def integrator_1():
@@ -121,8 +139,8 @@ def draw(t):
 
 
 		space = (
-			Vec2d(-sin(ang), -cos(ang)) * 3, # x axis / right
-			Vec2d( cos(ang), -sin(ang)) * 3  # y axis / forward
+			Vec2d(-sin(ang), cos(ang)) * 3, # x axis / right
+			Vec2d( cos(ang), sin(ang)) * 3  # y axis / forward
 		)
 
 		color = (obj['r'], obj['g'], obj['b'])
@@ -132,7 +150,7 @@ def draw(t):
 
 		def draw_shape(shape, origo, space, color):
 			rebase = lambda x, y: (space[0][0] * x + space[1][0] * y, space[0][1] * x + space[1][1] * y)
-			pygame.draw.polygon(screen, color, [origo + rebase(x, y) for x, y in shape])
+			pygame.draw.polygon(screen, color, [screen_coord(origo + rebase(x, y)) for x, y in shape])
 			#pygame.draw.aalines(screen, color, True, [origo + rebase(x, y) for x, y in shape])
 
 		draw_shape(ship_shape, pos, space, color)
@@ -258,6 +276,9 @@ while not done:
 	for e in pygame.event.get():
 		if e.type == KEYDOWN or e.type == KEYUP:
 			game.keystate[e.key] = e.type == KEYDOWN
+
+			if e.type == KEYDOWN and e.key == K_f:
+				set_screen_mode(not is_fullscreen)
 
 		if e.type == QUIT or (e.type == KEYDOWN and e.key == K_ESCAPE):
 			done = True
