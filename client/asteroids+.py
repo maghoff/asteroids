@@ -5,7 +5,7 @@ from socket import AF_INET, SOCK_DGRAM
 import struct
 import sys
 import time
-from math import sin, cos
+from math import sin, cos, isnan
 from vec2d import Vec2d
 
 
@@ -42,17 +42,35 @@ print 'Server at %s:%d' % (host, port)
 
 ### globals
 
-objects = []
-keystate = {}
+class game:
+	objects = []
+	keystate = {}
+	t0 = 0
+	time_delta = float('inf')
+	min_delta = float('inf')
+	avg_delta = float('nan')
+	max_delta = 0
+	base_delta = float('nan')
+	discard_messages = False
 
-def draw():
-	global objects
+font = pygame.font.Font(None, 16)
+
+def draw(t):
 	screen.fill((0, 0, 0))
-	for obj in objects:
-		pos = Vec2d(obj['x'] + 50, -obj['y'] + 50)
+	for obj in game.objects:
+		dt = t - game.t0
+		if dt < 0:
+			print 'Time since t0 > 0! (dt = %d)' % dt
+			dt = 0
 
-		fwd = Vec2d( cos(obj['ang']), -sin(obj['ang'])) * 10
-		rgt = Vec2d(-sin(obj['ang']), -cos(obj['ang'])) * 7
+		pos_at_t0 = Vec2d(obj['x'] + 50, -obj['y'] + 50)
+		ang_at_t0 = obj['ang']
+
+		pos = pos_at_t0 + Vec2d(obj['dx'], -obj['dy']) * dt
+		ang = ang_at_t0 + obj['dang'] * dt
+
+		fwd = Vec2d( cos(ang), -sin(ang)) * 10
+		rgt = Vec2d(-sin(ang), -cos(ang)) * 7
 
 		color = (obj['r'], obj['g'], obj['b'])
 
@@ -65,6 +83,21 @@ def draw():
 
 		pygame.draw.polygon(screen, color, pointlist)
 
+	def println(lines):
+		for i,text in enumerate(lines):
+			antialias_text = True
+			text_color = (255, 255, 0)
+			text = font.render(text, antialias_text, text_color)
+			screen.blit(text, (5, 5 + 16 * i))
+
+	println([
+		'Objects: %d' % len(game.objects),
+		'Base delta: %.1f' % (game.base_delta),
+		'Min delta: %.1f' % (game.max_delta - game.base_delta),
+		'Max delta: %.1f' % (game.max_delta - game.base_delta),
+		'Avg delta: %.1f' % (game.avg_delta - game.base_delta),
+	])
+
 	pygame.display.flip()
 
 def ping():
@@ -73,31 +106,80 @@ def ping():
 def status():
 	keysdown = 0
 
-	if keystate.get(K_UP, False):    keysdown += 1
-	if keystate.get(K_DOWN, False):  keysdown += 2
-	if keystate.get(K_LEFT, False):  keysdown += 4
-	if keystate.get(K_RIGHT, False): keysdown += 8
+	if game.keystate.get(K_UP, False):    keysdown += 1
+	if game.keystate.get(K_DOWN, False):  keysdown += 2
+	if game.keystate.get(K_LEFT, False):  keysdown += 4
+	if game.keystate.get(K_RIGHT, False): keysdown += 8
 
 	return struct.pack('!BB', msg_keysdown, keysdown)
 
 def send(data):
 	server.sendto(data, (host, port))
 
+def est_server_time():
+	# Assumption: remote = local + time_delta
+	local = pygame.time.get_ticks()
+	return local + game.time_delta
+
+packets = 0
 def parse_package(data):
-	global objects
+	global packets
+
 	header = ord(data[0])
+
+	if game.keystate.get(K_d, False):
+		return
+
+	#packets += 1
+	#if packets % 20 < 5:
+	#	return
+
 	if header == msg_status:
 		#data_type, fmt, keys = package[header]
 		#values = struct.unpack(fmt)
-		timestamp = struct.unpack('!I', data[1:5])
-		remaining = data[5:]
-		keys = ('type','r','g','b','x','dx','y','dy','ang','dang','status')
-		objects = []
-		while len(remaining):
-			values = struct.unpack('!BBBBffffffB', remaining[:29])
-			objects.append(dict(zip(keys, values)))
-			remaining = remaining[29:]
-		#print objects
+		timestamp = struct.unpack('!I', data[1:5])[0]
+		if timestamp >= game.t0:
+			game.t0 = timestamp
+
+			local_time = pygame.time.get_ticks()
+
+			package_delay = timestamp - local_time - game.min_delta
+			delta = timestamp - local_time
+
+			game.max_delta = max(delta, game.max_delta)
+			game.min_delta = min(delta, game.min_delta)
+
+			if isnan(game.avg_delta):
+				game.avg_delta  = delta
+				game.base_delta = delta
+			else:
+				weight = 0.01
+				game.avg_delta = game.avg_delta * (1 - weight) + delta * weight
+
+			if game.time_delta == float('inf'):
+				game.time_delta = delta
+
+			game.time_delta = int(game.avg_delta) + 10
+
+			#game.time_delta = game.min_delta + 30
+			#print 'Package delay: %.0f' % package_delay
+
+			if package_delay <= 1000:
+				#if local_time + game.time_delta > timestamp:
+				#	game.time_delta = timestamp - local_time
+				#	print game.time_delta
+
+				remaining = data[5:]
+				keys = ('type','r','g','b','x','dx','y','dy','ang','dang','status')
+				game.objects = []
+				while len(remaining):
+					values = struct.unpack('!BBBBffffffB', remaining[:29])
+					game.objects.append(dict(zip(keys, values)))
+					remaining = remaining[29:]
+			else:
+				print 'Discarding sort-of old package (>1000ms)'
+		else:
+			print 'Discard outdated message'
 	elif header == msg_ping:
 		print 'pong'
 	else:
@@ -120,11 +202,11 @@ while not done:
 	read_data()
 	for e in pygame.event.get():
 		if e.type == KEYDOWN or e.type == KEYUP:
-			keystate[e.key] = e.type == KEYDOWN
+			game.keystate[e.key] = e.type == KEYDOWN
 
 		if e.type == QUIT or (e.type == KEYDOWN and e.key == K_ESCAPE):
 			done = True
 			break
-	draw()
+	draw(est_server_time())
 	time.sleep(0.01)
 
