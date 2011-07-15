@@ -55,6 +55,15 @@ class game:
 
 font = pygame.font.Font(None, 16)
 
+
+### enums
+
+class status_flags:
+	engine = 1
+
+
+###
+
 def draw(t):
 	screen.fill((0, 0, 0))
 	for obj in game.objects:
@@ -69,19 +78,25 @@ def draw(t):
 		pos = pos_at_t0 + Vec2d(obj['dx'], -obj['dy']) * dt
 		ang = ang_at_t0 + obj['dang'] * dt
 
-		fwd = Vec2d( cos(ang), -sin(ang)) * 10
-		rgt = Vec2d(-sin(ang), -cos(ang)) * 7
+		space = (
+			Vec2d(-sin(ang), -cos(ang)) * 3, # x axis / right
+			Vec2d( cos(ang), -sin(ang)) * 3  # y axis / forward
+		)
 
 		color = (obj['r'], obj['g'], obj['b'])
 
-		pointlist = [
-			pos + fwd,
-			pos + rgt - fwd,
-			pos - 0.5 * fwd,
-			pos - rgt - fwd,
-		]
+		ship_shape  = [(0, 4), (2, -3), (0, -1), (-2, -3)]
+		burst_shape = [(0,-2), (1, -3), (0, -4), (-1, -3)]
 
-		pygame.draw.polygon(screen, color, pointlist)
+		def draw_shape(shape, origo, space, color):
+			rebase = lambda x, y: (space[0][0] * x + space[1][0] * y, space[0][1] * x + space[1][1] * y)
+			pygame.draw.polygon(screen, color, [origo + rebase(x, y) for x, y in shape])
+
+		draw_shape(ship_shape, pos, space, color)
+
+		if obj['status'] & status_flags.engine:
+			y = 255 * ((t / 300) % 2)
+			draw_shape(burst_shape, pos, space, (255,y,0))
 
 	def println(lines):
 		for i,text in enumerate(lines):
