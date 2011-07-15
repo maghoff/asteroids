@@ -95,8 +95,9 @@ def draw(t):
 		draw_shape(ship_shape, pos, space, color)
 
 		if obj['status'] & status_flags.engine:
-			y = 255 * ((t / 300) % 2)
-			draw_shape(burst_shape, pos, space, (255,y,0))
+			r = 255 * ((t / 20) % 2)
+			y = r * ((t / 300) % 2)
+			draw_shape(burst_shape, pos, space, (r,y,0))
 
 	def println(lines):
 		for i,text in enumerate(lines):
