@@ -193,7 +193,6 @@ def parse_package(data):
 
 			local_time = pygame.time.get_ticks()
 
-			package_delay = timestamp - local_time - game.min_delta
 			delta = timestamp - local_time
 
 			game.max_delta = max(delta, game.max_delta)
@@ -214,20 +213,17 @@ def parse_package(data):
 			#game.time_delta = game.min_delta + 30
 			#print 'Package delay: %.0f' % package_delay
 
-			if package_delay <= 1000:
-				#if local_time + game.time_delta > timestamp:
-				#	game.time_delta = timestamp - local_time
-				#	print game.time_delta
+			#if local_time + game.time_delta > timestamp:
+			#	game.time_delta = timestamp - local_time
+			#	print game.time_delta
 
-				remaining = data[5:]
-				keys = ('type','r','g','b','x','dx','y','dy','ang','dang','status')
-				game.objects = []
-				while len(remaining):
-					values = struct.unpack('!BBBBffffffB', remaining[:29])
-					game.objects.append(dict(zip(keys, values)))
-					remaining = remaining[29:]
-			else:
-				print 'Discarding sort-of old package (>1000ms)'
+			remaining = data[5:]
+			keys = ('type','r','g','b','x','dx','y','dy','ang','dang','status')
+			game.objects = []
+			while len(remaining):
+				values = struct.unpack('!BBBBffffffB', remaining[:29])
+				game.objects.append(dict(zip(keys, values)))
+				remaining = remaining[29:]
 		else:
 			print 'Discard outdated message'
 	elif header == msg_ping:
