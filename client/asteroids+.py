@@ -72,6 +72,7 @@ class game:
 	margin = 15
 	board_width  = 640 + margin * 2
 	board_height = 400 + margin * 2
+	fix_delta = False
 
 font = pygame.font.Font(None, 16)
 
@@ -177,13 +178,18 @@ def draw(t):
 			text = font.render(text, antialias_text, text_color)
 			screen.blit(text, (5, 5 + 16 * i))
 
-	println([
+	lines = [
 		'Objects: %d' % len(game.objects),
 		'Base delta: %.1f' % (game.base_delta),
 		'Min delta: %.1f' % (game.min_delta - game.base_delta),
 		'Max delta: %.1f' % (game.max_delta - game.base_delta),
 		'Avg delta: %.1f' % (game.avg_delta - game.base_delta),
-	])
+	]
+
+	if game.fix_delta:
+		lines.append('Fixed delta: %1.f' % (game.time_delta - game.base_delta))
+
+	println(lines)
 
 	pygame.display.flip()
 
@@ -246,7 +252,8 @@ def parse_package(data):
 			if game.time_delta == float('inf'):
 				game.time_delta = delta
 
-			game.time_delta = int(game.avg_delta) + 10
+			if not game.fix_delta:
+				game.time_delta = int(game.avg_delta) + 10
 
 			#game.time_delta = game.min_delta + 30
 			#print 'Package delay: %.0f' % package_delay
@@ -288,8 +295,11 @@ while not done:
 		if e.type == KEYDOWN or e.type == KEYUP:
 			game.keystate[e.key] = e.type == KEYDOWN
 
-			if e.type == KEYDOWN and e.key == K_f:
-				set_screen_mode(not is_fullscreen)
+			if e.type == KEYDOWN:
+				if e.key == K_f:
+					set_screen_mode(not is_fullscreen)
+				elif e.key == K_d:
+					game.fix_delta = not game.fix_delta
 
 		if e.type == QUIT or (e.type == KEYDOWN and e.key == K_ESCAPE):
 			done = True
