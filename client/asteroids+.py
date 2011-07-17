@@ -44,8 +44,8 @@ msg_ping     = 17
 
 ### network
 
-host = sys.argv[1] if len(sys.argv) > 1 else "localhost"
-port = sys.argv[2] if len(sys.argv) > 2 else 50005
+host =     sys.argv[1]  if len(sys.argv) > 1 else 'munkeliv.ath.cx'
+port = int(sys.argv[2]) if len(sys.argv) > 2 else 50005
 
 server = socket.socket(AF_INET,SOCK_DGRAM)
 server.setblocking(0)
