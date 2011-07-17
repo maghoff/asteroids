@@ -32,7 +32,7 @@ def set_screen_mode(fullscreen = False):
 	screen_size = screen.get_size()
 	#pygame.mouse.set_visible(0)
 
-set_screen_mode(True)
+set_screen_mode()
 pygame.display.set_caption('Asteroids+')
 
 ### protocol
@@ -66,9 +66,12 @@ class game:
 	max_delta = 0
 	base_delta = float('nan')
 	discard_messages = False
-	stars = [(random.randint(0, screen_size[0] - 1),
-	          random.randint(0, screen_size[1] - 1),
+	stars = [((random.random() - 0.5) * screen_size[0],
+	          (random.random() - 0.5) * screen_size[1],
 	          255 * (random.random() ** 2.2)) for i in xrange(250)]
+	margin = 15
+	board_width  = 640 + margin * 2
+	board_height = 400 + margin * 2
 
 font = pygame.font.Font(None, 16)
 
@@ -86,7 +89,7 @@ def draw(t):
 
 	def screen_coord(pos):
 		x, y = pos
-		return (x / 640. * screen_size[0], (1 - y / 400.) * screen_size[1])
+		return ((x + 320.) / 640. * screen_size[0], (1 - (y + 200) / 400.) * screen_size[1])
 
 	for x, y, lum in game.stars:
 		xs, ys = screen_coord((x, y))
@@ -99,7 +102,7 @@ def draw(t):
 			dt = 0
 
 		engine_on = bool(obj['status'] & status_flags.engine)
-		pos_at_t0 = Vec2d(obj['x'] + 50, obj['y'] + 50)
+		pos_at_t0 = Vec2d(obj['x'], obj['y'])
 		ang_at_t0 = obj['ang']
 		vel_at_t0 = Vec2d(obj['dx'], obj['dy'])
 		dang      = obj['dang']
@@ -120,7 +123,7 @@ def draw(t):
 
 			for i in xrange(dt):
 				if engine_on:
-					vel += 0.001 * Vec2d(cos(ang), -sin(ang))
+					vel += 0.001 * Vec2d(cos(ang), sin(ang))
 					speed = vel.get_length()
 					maxSpeed = 0.3
 					if speed > maxSpeed:
@@ -132,7 +135,15 @@ def draw(t):
 				pos += vel
 				ang += dang
 			
-			return pos, ang
+			def bind(value, length):
+				return (length * 1.5 + value % length) % length - length / 2
+
+			bound_pos = Vec2d(
+				bind(pos[0], game.board_width),
+				bind(pos[1], game.board_height)
+			)
+
+			return bound_pos, ang
 
 
 		pos, ang = integrator_2()
