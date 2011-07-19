@@ -80,4 +80,15 @@ void Participant::step() {
 	x += dx;
 	y += dy;
 	ang += dang;
+
+	const double spaceWidth = 640. + 2. * 15.;
+	const double spaceHeight = 400. + 2. * 15.;
+
+	x = fmod(x + spaceWidth / 2., spaceWidth) - spaceWidth / 2.;
+	if (x < 0.) x += spaceWidth;
+
+	y = fmod(y + spaceHeight / 2., spaceHeight) - spaceHeight / 2.;
+	if (y < 0.) y += spaceHeight;
+
+	ang = fmod(ang, 2. * M_PI);
 }
