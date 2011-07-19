@@ -4,6 +4,7 @@ import socket
 from socket import AF_INET, SOCK_DGRAM
 import struct
 import sys
+import os
 import time
 import random
 from math import sin, cos, isnan
@@ -40,6 +41,7 @@ pygame.display.set_caption('Asteroids+')
 msg_keysdown = 2
 msg_status   = 7
 msg_ping     = 17
+msg_name     = 32
 
 
 ### network
@@ -209,6 +211,11 @@ def status():
 
 	return struct.pack('!BB', msg_keysdown, keysdown)
 
+def name():
+	local_name = os.environ['USER']
+	
+	return struct.pack('!BB', msg_name, len(local_name)) + local_name
+
 def send(data):
 	server.sendto(data, (host, port))
 
@@ -288,10 +295,13 @@ def read_data():
 		return
 
 done = False
+loopcount = 0
 
 while not done:
 	#send(ping())
 	send(status())
+	if loopcount % 100 == 0:
+		send(name())
 	read_data()
 	for e in pygame.event.get():
 		if e.type == KEYDOWN or e.type == KEYUP:
@@ -310,4 +320,6 @@ while not done:
 			break
 	draw(est_server_time())
 	time.sleep(0.01)
+
+	loopcount += 1
 

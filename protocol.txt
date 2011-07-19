@@ -30,3 +30,6 @@ float: 32 bits IEEE 754
 17 = ping
     (reply is the same message)
 
+32 = name
+     1 byte string length
+     bytes... strings
