@@ -73,6 +73,15 @@ void Participant::step() {
 		}
 	}
 
+	const bool gravity = false;
+	if (gravity) {
+		double G = 0.000001;
+		double gx = -G * x;
+		double gy = -G * y;
+		dx += gx;
+		dy += gy;
+	}
+
 	const double damp = 0.999;
 	dx *= damp;
 	dy *= damp;
@@ -85,10 +94,10 @@ void Participant::step() {
 	const double spaceHeight = 400. + 2. * 15.;
 
 	x = fmod(x + spaceWidth / 2., spaceWidth) - spaceWidth / 2.;
-	if (x < 0.) x += spaceWidth;
+	if (x < -spaceWidth / 2.) x += spaceWidth;
 
 	y = fmod(y + spaceHeight / 2., spaceHeight) - spaceHeight / 2.;
-	if (y < 0.) y += spaceHeight;
+	if (y < -spaceHeight / 2.) y += spaceHeight;
 
 	ang = fmod(ang, 2. * M_PI);
 }
