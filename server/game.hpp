@@ -4,7 +4,7 @@
 #include <QObject>
 #include <QUdpSocket>
 #include <QHash>
-#include <QTime>
+#include <QDateTime>
 #include <QTimer>
 
 class Participant;
@@ -13,7 +13,7 @@ class Game : public QObject {
     Q_OBJECT
 
 	quint32 gameTicks;
-	QTime gameTime;
+	QDateTime gameTime;
 	QTimer timer, gcTimer;
 
 	QUdpSocket s;

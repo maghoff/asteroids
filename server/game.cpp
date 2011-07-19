@@ -23,7 +23,7 @@ Game::Game(QObject *parent) :
 	gcTimer.setInterval(1000);
 	gcTimer.start();
 
-	gameTime = QTime::currentTime();
+	gameTime = QDateTime::currentDateTime();
 	gameTicks = 0;
 }
 
@@ -110,7 +110,7 @@ void Game::step() {
 }
 
 void Game::timerSlot() {
-	for (; gameTime < QTime::currentTime(); gameTime = gameTime.addMSecs(1)) {
+	for (; gameTime < QDateTime::currentDateTime(); gameTime = gameTime.addMSecs(1)) {
 		step();
 		gameTicks++;
 	}
@@ -120,14 +120,14 @@ void Game::timerSlot() {
 
 void Game::disconnectStaleClients() {
 	typedef QHash<QString, Participant*>::const_iterator iter;
-	const int timeoutLimit = 5000;
+	const int timeoutLimitSecs = 5;
 
-	QTime currentTime = QTime::currentTime();
+	QDateTime currentTime = QDateTime::currentDateTime();
 	QSet<QString> stale;
 
 	for (iter i = p.begin(), e = p.end(); i != e; ++i) {
-		QTime lastSeen = (*i)->lastSeen;
-		if (lastSeen.isValid() && (lastSeen.msecsTo(currentTime) > timeoutLimit)) {
+		QDateTime lastSeen = (*i)->lastSeen;
+		if (lastSeen.isValid() && (lastSeen.secsTo(currentTime) > timeoutLimitSecs)) {
 			stale.insert(i.key());
 		}
 	}

@@ -3,7 +3,7 @@
 
 #include <QObject>
 #include <QHostAddress>
-#include <QTime>
+#include <QDateTime>
 #include <vector>
 
 class Participant : public QObject {
@@ -11,7 +11,7 @@ class Participant : public QObject {
 
 public:
 
-	QTime lastSeen;
+	QDateTime lastSeen;
 
 	QHostAddress host;
 	quint16 port;

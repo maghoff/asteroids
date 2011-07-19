@@ -29,7 +29,7 @@ const quint8 RIGHT_BITMASK = 0x08;
 const quint8 MSG_CONTROL_STATE = 0x02;
 
 void Participant::incoming(const std::vector<char>& data) {
-	lastSeen = QTime::currentTime();
+	lastSeen = QDateTime::currentDateTime();
 
 	QByteArray ba(data.data(), data.size());
 	QDataStream ds(&ba, QIODevice::ReadOnly);
