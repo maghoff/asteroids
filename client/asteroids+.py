@@ -163,6 +163,9 @@ def draw(t):
 		ship_shape  = [(0, 4), (2, -3), (0, -1), (-2, -3)]
 		burst_shape = [(0,-2), (1, -3), (0, -4), (-1, -3)]
 
+		ship_shape  = [(0, 4), (2, -2), (0, -1), (-2, -2)]
+		burst_shape = [(0,-1), (2, -2), (0, -3), (-2, -2)]
+
 		def draw_shape(shape, origo, space, color):
 			rebase = lambda x, y: (space[0][0] * x + space[1][0] * y, space[0][1] * x + space[1][1] * y)
 			pygame.draw.polygon(screen, color, [screen_coord(origo + rebase(x, y)) for x, y in shape])
