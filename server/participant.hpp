@@ -23,6 +23,12 @@ public:
 
 	void incoming(const std::vector<char>&);
 
+
+	virtual void step();
+
+    virtual void serializeStatus(QDataStream& ds);
+
+private:
 	struct {
 		quint8 r, g, b;
 	} color;
@@ -33,11 +39,6 @@ public:
 
 	bool engine;
 
-	virtual void step();
-
-    virtual void serializeStatus(QDataStream& ds);
-
-private:
     Game *game();
 
 signals:

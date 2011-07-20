@@ -64,10 +64,8 @@ void Participant::incoming(const std::vector<char>& data) {
         if (fire) {
             double bdx = cos(ang) * 1;
             double bdy = sin(ang) * 1;
-            new Bullet(parent(), x, y, bdx, bdy);
+            game()->add(new Bullet(game(), x, y, bdx, bdy));
         }
-
-    
 	}
 }
 

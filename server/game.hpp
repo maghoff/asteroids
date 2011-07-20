@@ -27,8 +27,12 @@ class Game : public QObject {
 	void sendUpdates();
 	void step();
 
+
 public:
     explicit Game(QObject *parent = 0);
+
+    void add(GameObject *o);
+    void remove(GameObject *o);
 
 signals:
 

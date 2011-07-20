@@ -71,6 +71,7 @@ const quint8 MSG_GAME_STATUS = 0x07;
 
 void Game::sendUpdates() {
 	typedef QHash<QString, Participant*>::const_iterator iter;
+	typedef QList<GameObject*>::const_iterator liter;
 
 	QByteArray datagram;
 	QDataStream ds(&datagram, QIODevice::WriteOnly);
@@ -80,6 +81,10 @@ void Game::sendUpdates() {
 	ds << (quint32)(gameTicks);
 
 	for (iter i = p.begin(), e = p.end(); i != e; ++i) {
+        (*i)->serializeStatus(ds);
+	}
+
+	for (liter i = go.begin(), e = go.end(); i != e; ++i) {
         (*i)->serializeStatus(ds);
 	}
 
@@ -135,4 +140,12 @@ void Game::disconnectStaleClients() {
 		delete p.value(*i);
 		p.remove(*i);
 	}
+}
+
+void Game::add(GameObject *o) {
+    go.push_front(o);
+}
+
+void Game::remove(GameObject *o) {
+    go.removeOne(o);
 }

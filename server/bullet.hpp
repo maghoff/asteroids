@@ -6,13 +6,14 @@
 #include <QDateTime>
 #include <vector>
 #include "gameobject.hpp"
+#include "game.hpp"
 
 class Bullet : public GameObject {
     Q_OBJECT
 
 public:
 
-	explicit Bullet(QObject *parent, double x, double y, double dx, double dy);
+	explicit Bullet(Game *parent, double x, double y, double dx, double dy);
 
 	virtual void step();
 
@@ -20,6 +21,9 @@ public:
 
 private:
     double x, y, dx, dy;
+    int timeToLive;
+
+    Game *game();
 
 signals:
 
