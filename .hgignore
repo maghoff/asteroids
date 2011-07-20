@@ -2,6 +2,8 @@ syntax:glob
 server-build-*
 *.pro.user
 *.pyc
+*.o
+moc_*.cpp
 asteroids+.zip
 server/server
 server/Makefile
