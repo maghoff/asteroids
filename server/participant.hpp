@@ -33,6 +33,8 @@ public:
 
 	void step();
 
+    void serializeStatus(QDataStream& ds);
+
 signals:
 
 public slots:

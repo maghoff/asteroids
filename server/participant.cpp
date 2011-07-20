@@ -39,7 +39,7 @@ void Participant::incoming(const std::vector<char>& data) {
 	ds >> msgType;
 
 	if (msgType == MSG_CONTROL_STATE) {
-		quint32 time;
+		/*quint32 time;*/
 		quint8 controlBits;
 
 		ds >> /*time >>*/ controlBits;
@@ -100,4 +100,16 @@ void Participant::step() {
 	if (y < -spaceHeight / 2.) y += spaceHeight;
 
 	ang = fmod(ang, 2. * M_PI);
+}
+
+const quint8 OBJ_SHIP = 0x07;
+
+void Participant::serializeStatus(QDataStream& ds) {
+	//ds << size in bytes, for skipping?;
+	ds << OBJ_SHIP;
+	ds << color.r << color.g << color.b;
+	ds << x << dx;
+	ds << y << dy;
+	ds << ang << dang;
+	ds << (quint8)(engine ? 1 : 0);
 }

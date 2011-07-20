@@ -67,7 +67,6 @@ void Game::incoming() {
 }
 
 const quint8 MSG_GAME_STATUS = 0x07;
-const quint8 OBJ_SHIP = 0x07;
 
 void Game::sendUpdates() {
 	typedef QHash<QString, Participant*>::const_iterator iter;
@@ -80,14 +79,7 @@ void Game::sendUpdates() {
 	ds << (quint32)(gameTicks);
 
 	for (iter i = p.begin(), e = p.end(); i != e; ++i) {
-		Participant& o = **i;
-		//ds << size in bytes, for skipping?;
-		ds << OBJ_SHIP;
-		ds << o.color.r << o.color.g << o.color.b;
-		ds << o.x << o.dx;
-		ds << o.y << o.dy;
-		ds << o.ang << o.dang;
-		ds << (quint8)(o.engine ? 1 : 0);
+        (*i)->serializeStatus(ds);
 	}
 
 	for (iter i = p.begin(), e = p.end(); i != e; ++i) {
