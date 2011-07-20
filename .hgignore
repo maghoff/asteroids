@@ -3,3 +3,5 @@ server-build-*
 *.pro.user
 *.pyc
 asteroids+.zip
+server/server
+server/Makefile
