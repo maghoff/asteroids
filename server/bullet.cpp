@@ -13,7 +13,7 @@ void Bullet::step() {
     }
 }
 
-const quint8 OBJ_BULLET = 0x08;
+const quint8 OBJ_BULLET = 0x09;
 
 void Bullet::serializeStatus(QDataStream& ds) {
 	ds << OBJ_BULLET;

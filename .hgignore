@@ -3,6 +3,7 @@ server-build-*
 *.pro.user
 *.pyc
 *.o
+*.orig
 moc_*.cpp
 asteroids+.zip
 server/server
