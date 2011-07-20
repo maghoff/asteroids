@@ -2,22 +2,45 @@ For all fields: Network byte order
 
 float: 32 bits IEEE 754
 
+string:
+    1 byte length of string in bytes, n
+    n bytes utf-8 encoded string
 
 7 = game status (from server)
     4 byte timestamp
 
     followed by however many of:
+
     1 byte object type (ship = 7)
+    - 1 byte r
+    - 1 byte g
+    - 1 byte b
+    - 1 float x
+    - 1 float dx
+    - 1 float y
+    - 1 float dy
+    - 1 float ang 
+    - 1 float dang
+    - 1 byte status (1 = engine on)
+
+    1 byte object type (awesome ship = 8)
+    - 1 byte id
+    - 1 float x
+    - 1 float dx
+    - 1 float y
+    - 1 float dy
+    - 1 float ang 
+    - 1 float dang
+    - 1 byte status (1 = engine on)
+
+
+59 = ship-info
+    any number of the following:
+    1 byte id
     1 byte r
     1 byte g
     1 byte b
-    1 float x
-    1 float dx
-    1 float y
-    1 float dy
-    1 float ang 
-    1 float dang
-    1 byte status (1 = engine on)
+    1 string name
 
 2 = keys down (from players)
     1 byte keys down. From least significant bit:
@@ -30,6 +53,5 @@ float: 32 bits IEEE 754
 17 = ping
     (reply is the same message)
 
-32 = name
-     1 byte string length
-     bytes... strings
+32 = player name
+    1 string name

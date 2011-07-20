@@ -76,8 +76,10 @@ class game:
 	board_height = 400 + margin * 2
 	fix_delta = False
 	show_info = False
+	show_name = True
+	ship_info = {}
 
-font = pygame.font.Font(None, 16)
+font = pygame.font.Font(None, 16) if pygame.font else None
 
 
 ### enums
@@ -87,6 +89,14 @@ class status_flags:
 
 
 ###
+
+def draw_text(text, pos, text_color, centered=False):
+	antialias_text = True
+	renederd_text = font.render(text, antialias_text, text_color)
+	if centered:
+		pos = renederd_text.get_rect(centerx = pos[0], centery = pos[1])
+
+	screen.blit(renederd_text, pos)
 
 def draw(t):
 	screen.fill((0, 0, 0))
@@ -110,6 +120,10 @@ def draw(t):
 		ang_at_t0 = obj['ang']
 		vel_at_t0 = Vec2d(obj['dx'], obj['dy'])
 		dang      = obj['dang']
+		if 'id' in obj:
+			info  = game.ship_info.get(obj['id'], {})
+		else:
+			info  = None
 
 		def integrator_1():
 			pos = pos_at_t0 + vel_at_t0 * dt
@@ -158,7 +172,10 @@ def draw(t):
 			Vec2d( cos(ang), sin(ang)) * 3  # y axis / forward
 		)
 
-		color = (obj['r'], obj['g'], obj['b'])
+		if info is not None:
+			color = (info.get('r', 255), info.get('g', 255), info.get('b', 255))
+		else:
+			color = (obj['r'], obj['g'], obj['b'])
 
 		ship_shape  = [(0, 4), (2, -3), (0, -1), (-2, -3)]
 		burst_shape = [(0,-2), (1, -3), (0, -4), (-1, -3)]
@@ -177,14 +194,14 @@ def draw(t):
 			y = 255 * ((t / 300) % 2)
 			draw_shape(burst_shape, pos, space, (255,y,0))
 
+		if game.show_name and font and info is not None:
+			draw_text(info.get('name', '?'), screen_coord(pos) + Vec2d(0, 20), color, True)
+
 	def println(lines):
 		for i,text in enumerate(lines):
-			antialias_text = True
-			text_color = (255, 255, 0)
-			text = font.render(text, antialias_text, text_color)
-			screen.blit(text, (5, 5 + 16 * i))
+			draw_text(text, (5, 5 + 16 * i), (255, 255, 0))
 
-	if game.show_info:
+	if game.show_info and font:
 		lines = [
 			'Objects: %d' % len(game.objects),
 			'Base delta: %.1f' % (game.base_delta),
@@ -227,6 +244,27 @@ def est_server_time():
 	local = pygame.time.get_ticks()
 	return local + game.time_delta
 
+def format_string_length(s):
+	'''Calculate the size of the string needed to unpack a format string
+	as specified in http://docs.python.org/library/struct.html'''
+
+	char_size = {
+		'b': 1,
+		'B': 1,
+		'?': 1,
+		'h': 2,
+		'H': 2,
+		'i': 4,
+		'I': 4,
+		'l': 4,
+		'L': 4,
+		'q': 8,
+		'Q': 8,
+		'f': 4,
+		'd': 8,
+	}
+	return sum(char_size[char] for char in s)
+				
 packets = 0
 def parse_package(data):
 	global packets
@@ -267,20 +305,23 @@ def parse_package(data):
 			if not game.fix_delta:
 				game.time_delta = int(game.avg_delta) + 10
 
-			#game.time_delta = game.min_delta + 30
-			#print 'Package delay: %.0f' % package_delay
-
-			#if local_time + game.time_delta > timestamp:
-			#	game.time_delta = timestamp - local_time
-			#	print game.time_delta
-
 			remaining = data[5:]
-			keys = ('type','r','g','b','x','dx','y','dy','ang','dang','status')
+			deserializer = {
+				7: ('BBBffffffB', ('r','g','b','x','dx','y','dy','ang','dang','status')),
+				8: (  'BffffffB', ('id',       'x','dx','y','dy','ang','dang','status')),
+			}
+
 			game.objects = []
 			while len(remaining):
-				values = struct.unpack('!BBBBffffffB', remaining[:29])
+				obj_type = struct.unpack('!B', remaining[0])[0]
+				remaining = remaining[1:]
+				
+				format_string, keys = deserializer[obj_type]
+
+				substring_size = format_string_length(format_string)
+				values = struct.unpack('!' + format_string, remaining[:substring_size])
 				game.objects.append(dict(zip(keys, values)))
-				remaining = remaining[29:]
+				remaining = remaining[substring_size:]
 		else:
 			print 'Discard outdated message'
 	elif header == msg_ping:
