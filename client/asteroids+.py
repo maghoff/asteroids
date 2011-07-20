@@ -309,6 +309,7 @@ def parse_package(data):
 			deserializer = {
 				7: ('BBBffffffB', ('r','g','b','x','dx','y','dy','ang','dang','status')),
 				8: (  'BffffffB', ('id',       'x','dx','y','dy','ang','dang','status')),
+				9: (      'ffff', (            'x','dx','y','dy'                      )),
 			}
 
 			game.objects = []
