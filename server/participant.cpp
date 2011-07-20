@@ -1,8 +1,10 @@
 #include <cmath>
 #include "participant.hpp"
+#include "bullet.hpp"
+#include "spacemath.hpp"
 
-Participant::Participant(QObject *parent, QHostAddress host_, quint16 port_) :
-	QObject(parent),
+Participant::Participant(Game *parent, QHostAddress host_, quint16 port_) :
+	GameObject(parent),
 	host(host_),
 	port(port_)
 {
@@ -25,6 +27,7 @@ const quint8 UP_BITMASK = 0x01;
 const quint8 DOWN_BITMASK = 0x02;
 const quint8 LEFT_BITMASK = 0x04;
 const quint8 RIGHT_BITMASK = 0x08;
+const quint8 FIRE_BITMASK = 0x10;
 
 const quint8 MSG_CONTROL_STATE = 0x02;
 
@@ -48,6 +51,7 @@ void Participant::incoming(const std::vector<char>& data) {
 		bool down = controlBits & DOWN_BITMASK;
 		bool left = controlBits & LEFT_BITMASK;
 		bool right = controlBits & RIGHT_BITMASK;
+		bool fire = controlBits & FIRE_BITMASK;
 
 		dang = (left ? 1 : 0) + (right ? -1 : 0);
 		dang *= 0.005;
@@ -56,6 +60,14 @@ void Participant::incoming(const std::vector<char>& data) {
 		if (down) {
 			dx = dy = 0;
 		}
+
+        if (fire) {
+            double bdx = cos(ang) * 1;
+            double bdy = sin(ang) * 1;
+            new Bullet(parent(), x, y, bdx, bdy);
+        }
+
+    
 	}
 }
 
@@ -90,14 +102,7 @@ void Participant::step() {
 	y += dy;
 	ang += dang;
 
-	const double spaceWidth = 640. + 2. * 15.;
-	const double spaceHeight = 400. + 2. * 15.;
-
-	x = fmod(x + spaceWidth / 2., spaceWidth) - spaceWidth / 2.;
-	if (x < -spaceWidth / 2.) x += spaceWidth;
-
-	y = fmod(y + spaceHeight / 2., spaceHeight) - spaceHeight / 2.;
-	if (y < -spaceHeight / 2.) y += spaceHeight;
+    cropToSpace(x, y);
 
 	ang = fmod(ang, 2. * M_PI);
 }
@@ -112,4 +117,8 @@ void Participant::serializeStatus(QDataStream& ds) {
 	ds << y << dy;
 	ds << ang << dang;
 	ds << (quint8)(engine ? 1 : 0);
+}
+
+Game *Participant::game() {
+    return (Game*) parent();
 }

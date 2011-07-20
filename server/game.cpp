@@ -2,6 +2,7 @@
 #include <QDebug>
 #include <QSet>
 #include "game.hpp"
+#include "gameobject.hpp"
 #include "participant.hpp"
 
 Game::Game(QObject *parent) :
@@ -99,6 +100,11 @@ void Game::step() {
 	for (iter i = p.begin(), e = p.end(); i != e; ++i) {
 		(*i)->step();
 	}
+	typedef QList<GameObject*>::iterator liter;
+	for (liter i = go.begin(), e = go.end(); i != e; ++i) {
+		(*i)->step();
+	}
+
 }
 
 void Game::timerSlot() {
