@@ -1,9 +1,6 @@
-- name for all players
 - collision
  - ship vs ship
  - ship vs asteroid
-- shooting
- - visualization
 - explosion
  - ship
  - asteroid
