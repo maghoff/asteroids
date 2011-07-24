@@ -78,6 +78,8 @@ class game:
 	          (random.random() - 0.5) * screen_size[1],
 	          255 * (random.random() ** 2.2)) for i in xrange(250)]
 
+	local_name = os.environ.get('USER', '')
+	
 	margin       = 15
 	board_width  = 640 + margin * 2
 	board_height = 400 + margin * 2
@@ -259,10 +261,10 @@ def draw(t):
 
 	pygame.display.flip()
 
-def ping():
+def ping_message():
 	return struct.pack('B', msg_ping)
 
-def status():
+def status_message():
 	keysdown = 0
 
 	if game.keystate.get(K_UP, False):    keysdown += 1
@@ -273,10 +275,12 @@ def status():
 
 	return struct.pack('!BB', msg_keysdown, keysdown)
 
-def name():
-	local_name = os.environ['USER'].encode('utf-16-be')
-	
-	return struct.pack('!BI', msg_name, len(local_name)) + local_name
+def serialize_string(string):
+	return struct.pack('!I', len(string)) + string
+
+def name_message():
+	name = game.local_name.encode('utf-16-be')
+	return struct.pack('!B', msg_name) + serialize_string(name)
 
 def send(data):
 	server.sendto(data, (host, port))
@@ -396,7 +400,6 @@ def read_data():
 	try:
 		while True:
 			data,addr = server.recvfrom(buffer_size)
-			#print len(data)
 			parse_package(data)
 	except socket.error:
 		return
@@ -405,9 +408,9 @@ done = False
 loopcount = 0
 
 while not done:
-	send(status())
+	send(status_message())
 	if loopcount % 100 == 0:
-		send(name())
+		send(name_message())
 	read_data()
 	for e in pygame.event.get():
 		if e.type == KEYDOWN or e.type == KEYUP:
