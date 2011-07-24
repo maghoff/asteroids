@@ -86,6 +86,7 @@ class game:
 	show_info    = False
 	show_name    = True
 	sound_on     = True
+	arcade_style = True
 
 font = pygame.font.Font(None, 16) if pygame.font else None
 
@@ -182,7 +183,10 @@ def draw_ship(obj, dt, t):
 	def draw_shape(shape, origo, space, color):
 		rebase = lambda x, y: (space[0][0] * x + space[1][0] * y, space[0][1] * x + space[1][1] * y)
 		path = [screen_coord(origo + rebase(x, y)) for x, y in shape]
-		pygame.draw.polygon(screen, color, path)
+		if game.arcade_style:
+			pygame.draw.lines(screen, color, True, path)
+		else:
+			pygame.draw.polygon(screen, color, path)
 
 	draw_shape(ship_shape, pos, space, color)
 
@@ -199,7 +203,11 @@ def draw_bullet(obj, dt, t):
 
 	pos = pos_at_t0 + vel_at_t0 * dt
 
-	pygame.draw.circle(screen, (255, 255, 255), screen_coord(pos), 2)
+	if game.arcade_style:
+		pygame.draw.line(screen, (255, 255, 255), screen_coord(pos - Vec2d(3, 0)), screen_coord(pos + Vec2d(3, 0)))
+		pygame.draw.line(screen, (255, 255, 255), screen_coord(pos - Vec2d(0, 3)), screen_coord(pos + Vec2d(0, 3)))
+	else:
+		pygame.draw.circle(screen, (255, 255, 255), screen_coord(pos), 2)
 
 def sound_bullet(obj):
 	if game.sound_on:
@@ -425,6 +433,8 @@ while not done:
 					game.ship_info = {}
 				elif e.key == K_s:
 					game.sound_on = not game.sound_on
+				elif e.key == K_t:
+					game.arcade_style = not game.arcade_style
 
 		if e.type == QUIT or (e.type == KEYDOWN and e.key == K_ESCAPE):
 			done = True
