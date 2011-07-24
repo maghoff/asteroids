@@ -22,6 +22,7 @@ public:
 private:
     double x, y, dx, dy;
     int timeToLive;
+	quint16 id;
 
     Game *game();
 

@@ -1,6 +1,8 @@
-For all fields: Network byte order
+For all fields: Network byte order (big endian)
 
 float: 32 bits IEEE 754
+
+word: 16 bits
 
 string:
     4 bytes length of string in bytes, n
@@ -34,6 +36,13 @@ string:
     - 1 byte status (1 = engine on)
 
     1 byte object type (bullet = 9)
+    - 1 float x
+    - 1 float dx
+    - 1 float y
+    - 1 float dy
+
+    1 byte object type (awesome bullet = 10)
+    - 1 word id
     - 1 float x
     - 1 float dx
     - 1 float y

@@ -7,6 +7,7 @@ import sys
 import os
 import time
 import random
+from collections import defaultdict
 from math import sin, cos, isnan
 from vec2d import Vec2d
 
@@ -16,6 +17,7 @@ from vec2d import Vec2d
 import pygame
 from pygame.locals import *
 pygame.init()
+pygame.mixer.init()
 
 def set_screen_mode(fullscreen = False):
 	global screen_size, screen, is_fullscreen
@@ -79,6 +81,8 @@ class game:
 	show_info = False
 	show_name = True
 	ship_info = {}
+	sound_on  = True
+	seen_ids  = defaultdict(lambda: set())
 
 font = pygame.font.Font(None, 16) if pygame.font else None
 
@@ -194,6 +198,27 @@ def draw_bullet(obj, dt, t):
 
 	pygame.draw.circle(screen, (255, 255, 255), screen_coord(pos), 2)
 
+def sound_bullet(obj):
+	if game.sound_on:
+		sound  = pygame.mixer.Sound('pewpew.wav')
+		channel = sound.play()
+
+def sound_spawn(obj):
+	if game.sound_on:
+		sound  = pygame.mixer.Sound('spawn.wav')
+		channel = sound.play()
+
+# Functions for each type. Tuple of
+#   - draw - how to draw the object
+#   - encounter - what to do when first encountering an
+#                 object with this type/id
+type_functions = {
+	 7: (draw_ship,   None),
+	 8: (draw_ship,   sound_spawn),
+	 9: (draw_bullet, None),
+	10: (draw_bullet, sound_bullet),
+}
+
 def draw(t):
 	screen.fill((0, 0, 0))
 
@@ -201,19 +226,13 @@ def draw(t):
 		xs, ys = screen_coord((x, y))
 		screen.fill((lum, lum, lum), (xs, ys, 1, 1))
 
-	type_functions = {
-		7: (draw_ship,   ),
-		8: (draw_ship,   ),
-		9: (draw_bullet, ),
-	}
-
 	for obj in game.objects:
 		dt = t - game.t0
 		if dt < 0:
 			#print 'Time since t0 > 0! (dt = %d)' % dt
 			dt = 0
 
-		draw_func, = type_functions[obj['type']]
+		draw_func, encounter = type_functions[obj['type']]
 		
 		draw_func(obj, dt, t)
 
@@ -329,9 +348,10 @@ def parse_package(data):
 			remaining = data[5:]
 
 			deserializer = {
-				7: ('BBBffffffB', ('r','g','b','x','dx','y','dy','ang','dang','status')),
-				8: (  'BffffffB', ('id',       'x','dx','y','dy','ang','dang','status')),
-				9: (      'ffff', (            'x','dx','y','dy'                      )),
+				 7: ('BBBffffffB', ('r','g','b','x','dx','y','dy','ang','dang','status')),
+				 8: (  'BffffffB', ('id',       'x','dx','y','dy','ang','dang','status')),
+				 9: (      'ffff', (            'x','dx','y','dy'                      )),
+				10: (     'Hffff', ('id',       'x','dx','y','dy'                      )),
 			}
 
 			game.objects = []
@@ -343,8 +363,15 @@ def parse_package(data):
 
 				substring_size = format_string_length(format_string)
 				values = struct.unpack('!' + format_string, remaining[:substring_size])
-				game.objects.append(dict(zip(keys, values) + [('type', obj_type)]))
+				obj = dict(zip(keys, values) + [('type', obj_type)])
+				game.objects.append(obj)
 				remaining = remaining[substring_size:]
+
+				draw_func, encounter = type_functions[obj_type]
+				if encounter is not None:
+					if obj['id'] not in game.seen_ids[obj_type]:
+						game.seen_ids[obj_type].add(obj['id'])
+						encounter(obj)
 		else:
 			print 'Discard outdated message'
 	elif header == msg_ping:
@@ -396,6 +423,8 @@ while not done:
 					game.show_info = not game.show_info
 				elif e.key == K_c:
 					game.ship_info = {}
+				elif e.key == K_s:
+					game.sound_on = not game.sound_on
 
 		if e.type == QUIT or (e.type == KEYDOWN and e.key == K_ESCAPE):
 			done = True
