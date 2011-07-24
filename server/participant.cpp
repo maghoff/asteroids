@@ -6,7 +6,8 @@
 Participant::Participant(Game *parent, QHostAddress host_, quint16 port_) :
 	GameObject(parent),
 	host(host_),
-	port(port_)
+	port(port_),
+	weapon_cooldown(0)
 {
 	static quint8 nextid = 0;
 
@@ -65,11 +66,7 @@ void Participant::incoming(const std::vector<char>& data) {
 			dx = dy = 0;
 		}
 
-        if (fire) {
-            double bdx = cos(ang) * 1;
-            double bdy = sin(ang) * 1;
-            game()->add(new Bullet(game(), x, y, bdx + dx, bdy + dy));
-        }
+        is_firing = fire;
 	}
 	else if (msgType == MSG_PLAYER_NAME) {
 		ds >> name;
@@ -103,6 +100,15 @@ void Participant::step() {
     cropToSpace(x, y);
 
 	ang = fmod(ang, 2. * M_PI);
+        	
+    if (weapon_cooldown > 0) {
+    	weapon_cooldown--;
+    } else if (is_firing) {
+        double bdx = cos(ang) * 1;
+        double bdy = sin(ang) * 1;
+        game()->add(new Bullet(game(), x, y, bdx + dx, bdy + dy));
+    	weapon_cooldown = 500;
+    }
 }
 
 const quint8 OBJ_SHIP = 0x08;

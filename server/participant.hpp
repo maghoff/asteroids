@@ -43,6 +43,9 @@ private:
 	double ang, dang;
 
 	bool engine;
+	bool is_firing;
+
+	long weapon_cooldown;
 
 	QString name;
 
