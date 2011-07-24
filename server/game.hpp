@@ -5,7 +5,9 @@
 #include <QUdpSocket>
 #include <QHash>
 #include <QDateTime>
+#include <QList>
 #include <QTimer>
+#include "gameobject.hpp"
 
 class Participant;
 
@@ -18,14 +20,19 @@ class Game : public QObject {
 
 	QUdpSocket s;
 	QHash<QString, Participant*> p;
+    QList<GameObject*> go;
 
 	Participant* acquireParticipant(QHostAddress srcHost, quint16 port);
 
 	void sendUpdates();
 	void step();
 
+
 public:
     explicit Game(QObject *parent = 0);
+
+    void add(GameObject *o);
+    void remove(GameObject *o);
 
 signals:
 

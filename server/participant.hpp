@@ -5,8 +5,10 @@
 #include <QHostAddress>
 #include <QDateTime>
 #include <vector>
+#include "gameobject.hpp"
+#include "game.hpp"
 
-class Participant : public QObject {
+class Participant : public GameObject {
     Q_OBJECT
 
 public:
@@ -16,11 +18,17 @@ public:
 	QHostAddress host;
 	quint16 port;
 
-	explicit Participant(QObject *parent, QHostAddress host, quint16 port);
+	explicit Participant(Game *parent, QHostAddress host, quint16 port);
 	~Participant();
 
 	void incoming(const std::vector<char>&);
 
+
+	virtual void step();
+
+    virtual void serializeStatus(QDataStream& ds);
+
+private:
 	struct {
 		quint8 r, g, b;
 	} color;
@@ -31,7 +39,7 @@ public:
 
 	bool engine;
 
-	void step();
+    Game *game();
 
 signals:
 

@@ -2,6 +2,7 @@
 #include <QDebug>
 #include <QSet>
 #include "game.hpp"
+#include "gameobject.hpp"
 #include "participant.hpp"
 
 Game::Game(QObject *parent) :
@@ -67,10 +68,10 @@ void Game::incoming() {
 }
 
 const quint8 MSG_GAME_STATUS = 0x07;
-const quint8 OBJ_SHIP = 0x07;
 
 void Game::sendUpdates() {
 	typedef QHash<QString, Participant*>::const_iterator iter;
+	typedef QList<GameObject*>::const_iterator liter;
 
 	QByteArray datagram;
 	QDataStream ds(&datagram, QIODevice::WriteOnly);
@@ -80,14 +81,11 @@ void Game::sendUpdates() {
 	ds << (quint32)(gameTicks);
 
 	for (iter i = p.begin(), e = p.end(); i != e; ++i) {
-		Participant& o = **i;
-		//ds << size in bytes, for skipping?;
-		ds << OBJ_SHIP;
-		ds << o.color.r << o.color.g << o.color.b;
-		ds << o.x << o.dx;
-		ds << o.y << o.dy;
-		ds << o.ang << o.dang;
-		ds << (quint8)(o.engine ? 1 : 0);
+        (*i)->serializeStatus(ds);
+	}
+
+	for (liter i = go.begin(), e = go.end(); i != e; ++i) {
+        (*i)->serializeStatus(ds);
 	}
 
 	for (iter i = p.begin(), e = p.end(); i != e; ++i) {
@@ -107,6 +105,11 @@ void Game::step() {
 	for (iter i = p.begin(), e = p.end(); i != e; ++i) {
 		(*i)->step();
 	}
+	typedef QList<GameObject*>::iterator liter;
+	for (liter i = go.begin(), e = go.end(); i != e; ++i) {
+		(*i)->step();
+	}
+
 }
 
 void Game::timerSlot() {
@@ -137,4 +140,12 @@ void Game::disconnectStaleClients() {
 		delete p.value(*i);
 		p.remove(*i);
 	}
+}
+
+void Game::add(GameObject *o) {
+    go.push_front(o);
+}
+
+void Game::remove(GameObject *o) {
+    go.removeOne(o);
 }

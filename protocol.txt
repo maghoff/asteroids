@@ -33,6 +33,12 @@ string:
     - 1 float dang
     - 1 byte status (1 = engine on)
 
+    1 byte object type (bullet = 9)
+    - 1 float x
+    - 1 float dx
+    - 1 float y
+    - 1 float dy
+
 
 59 = ship-info
     any number of the following:
