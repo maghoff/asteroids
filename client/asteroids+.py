@@ -122,12 +122,7 @@ def draw_ship(obj, dt, t):
 	else:
 		info  = None
 
-	def integrator_1():
-		pos = pos_at_t0 + vel_at_t0 * dt
-		ang = ang_at_t0 + dang * dt
-		return pos, ang
-
-	def integrator_2():
+	def integrator():
 		pos = pos_at_t0
 		ang = ang_at_t0
 		vel = vel_at_t0
@@ -157,7 +152,7 @@ def draw_ship(obj, dt, t):
 		return bound_pos, ang
 
 
-	pos, ang = integrator_2()
+	pos, ang = integrator()
 
 
 	space = (
