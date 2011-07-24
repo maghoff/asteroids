@@ -8,11 +8,14 @@ Participant::Participant(Game *parent, QHostAddress host_, quint16 port_) :
 	host(host_),
 	port(port_)
 {
+	static quint8 nextid = 0;
+
 	int col = 7 * (rand() / (double)RAND_MAX) + 1;
 	color.r = (col & 0x01) ? 0xFF : 0x00;
 	color.g = (col & 0x02) ? 0xFF : 0x00;
 	color.b = (col & 0x04) ? 0xFF : 0x00;
 
+	id = nextid++;
 	x = 0; dx = 0;
 	y = 0; dy = 0;
 	ang = 0; dang = 0;
@@ -30,6 +33,7 @@ const quint8 RIGHT_BITMASK = 0x08;
 const quint8 FIRE_BITMASK = 0x10;
 
 const quint8 MSG_CONTROL_STATE = 0x02;
+const quint8 MSG_PLAYER_NAME = 0x20;
 
 void Participant::incoming(const std::vector<char>& data) {
 	lastSeen = QDateTime::currentDateTime();
@@ -66,6 +70,9 @@ void Participant::incoming(const std::vector<char>& data) {
             double bdy = sin(ang) * 1;
             game()->add(new Bullet(game(), x, y, bdx, bdy));
         }
+	}
+	else if (msgType == MSG_PLAYER_NAME) {
+		ds >> name;
 	}
 }
 
@@ -105,16 +112,22 @@ void Participant::step() {
 	ang = fmod(ang, 2. * M_PI);
 }
 
-const quint8 OBJ_SHIP = 0x07;
+const quint8 OBJ_SHIP = 0x08;
 
 void Participant::serializeStatus(QDataStream& ds) {
 	//ds << size in bytes, for skipping?;
 	ds << OBJ_SHIP;
-	ds << color.r << color.g << color.b;
+	ds << id;
 	ds << x << dx;
 	ds << y << dy;
 	ds << ang << dang;
 	ds << (quint8)(engine ? 1 : 0);
+}
+
+void Participant::serializeShipInfo(QDataStream& ds) {
+	ds << id;
+	ds << color.r << color.g << color.b;
+	ds << name;
 }
 
 Game *Participant::game() {

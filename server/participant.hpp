@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QHostAddress>
 #include <QDateTime>
+#include <QString>
 #include <vector>
 #include "gameobject.hpp"
 #include "game.hpp"
@@ -27,17 +28,23 @@ public:
 	virtual void step();
 
     virtual void serializeStatus(QDataStream& ds);
+	void serializeShipInfo(QDataStream& ds);
+
 
 private:
 	struct {
 		quint8 r, g, b;
 	} color;
+	
+	quint8 id;
 
 	double x, dx;
 	double y, dy;
 	double ang, dang;
 
 	bool engine;
+
+	QString name;
 
     Game *game();
 

@@ -18,13 +18,17 @@ class Game : public QObject {
 	QDateTime gameTime;
 	QTimer timer, gcTimer;
 
+	quint32 nextSendShipInfo;
+
 	QUdpSocket s;
 	QHash<QString, Participant*> p;
     QList<GameObject*> go;
 
 	Participant* acquireParticipant(QHostAddress srcHost, quint16 port);
 
-	void sendUpdates();
+	void sendObjectUpdates();
+	void sendShipInfo();
+	void sendToAll(QByteArray& datagram);
 	void step();
 
 

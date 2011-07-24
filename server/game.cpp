@@ -26,6 +26,7 @@ Game::Game(QObject *parent) :
 
 	gameTime = QDateTime::currentDateTime();
 	gameTicks = 0;
+	nextSendShipInfo = 0;
 }
 
 Participant* Game::acquireParticipant(QHostAddress srcHost, quint16 srcPort) {
@@ -67,9 +68,24 @@ void Game::incoming() {
 	p->incoming(d);
 }
 
-const quint8 MSG_GAME_STATUS = 0x07;
+void Game::sendToAll(QByteArray& datagram) {
+	typedef QHash<QString, Participant*>::const_iterator iter;
 
-void Game::sendUpdates() {
+	for (iter i = p.begin(), e = p.end(); i != e; ++i) {
+		qint64 w = s.writeDatagram(datagram, (*i)->host, (*i)->port);
+		if (w != datagram.size()) {
+			if (w == -1) {
+				qDebug() << "ERROR writing datagram";
+			} else {
+				qDebug() << "ERROR writing datagram. Sizes did not match (Wrote " << w << "b of " << datagram.size() << "b)";
+			}
+		}
+	}
+}
+const quint8 MSG_GAME_STATUS = 0x07;
+const quint8 MSG_SHIP_INFO = 0x3b;
+
+void Game::sendObjectUpdates() {
 	typedef QHash<QString, Participant*>::const_iterator iter;
 	typedef QList<GameObject*>::const_iterator liter;
 
@@ -88,16 +104,23 @@ void Game::sendUpdates() {
         (*i)->serializeStatus(ds);
 	}
 
+	sendToAll(datagram);
+}
+
+void Game::sendShipInfo() {
+	typedef QHash<QString, Participant*>::const_iterator iter;
+
+	QByteArray datagram;
+	QDataStream ds(&datagram, QIODevice::WriteOnly);
+	ds.setFloatingPointPrecision(QDataStream::SinglePrecision);
+
+	ds << MSG_SHIP_INFO;
+
 	for (iter i = p.begin(), e = p.end(); i != e; ++i) {
-		qint64 w = s.writeDatagram(datagram, (*i)->host, (*i)->port);
-		if (w != datagram.size()) {
-			if (w == -1) {
-				qDebug() << "ERROR writing datagram";
-			} else {
-				qDebug() << "ERROR writing datagram. Sizes did not match (Wrote " << w << "b of " << datagram.size() << "b)";
-			}
-		}
+        (*i)->serializeShipInfo(ds);
 	}
+
+	sendToAll(datagram);
 }
 
 void Game::step() {
@@ -118,7 +141,13 @@ void Game::timerSlot() {
 		gameTicks++;
 	}
 
-	sendUpdates();
+	sendObjectUpdates();
+
+	if (gameTicks >= nextSendShipInfo)
+	{
+		sendShipInfo();
+		nextSendShipInfo = gameTicks + 1000;
+	}
 }
 
 void Game::disconnectStaleClients() {

@@ -38,10 +38,11 @@ pygame.display.set_caption('Asteroids+')
 
 ### protocol
 
-msg_keysdown = 2
-msg_status   = 7
-msg_ping     = 17
-msg_name     = 32
+msg_keysdown  = 2
+msg_status    = 7
+msg_ping      = 17
+msg_name      = 32
+msg_ship_info = 59
 
 
 ### network
@@ -209,7 +210,7 @@ def draw(t):
 	for obj in game.objects:
 		dt = t - game.t0
 		if dt < 0:
-			print 'Time since t0 > 0! (dt = %d)' % dt
+			#print 'Time since t0 > 0! (dt = %d)' % dt
 			dt = 0
 
 		draw_func, = type_functions[obj['type']]
@@ -252,9 +253,9 @@ def status():
 	return struct.pack('!BB', msg_keysdown, keysdown)
 
 def name():
-	local_name = os.environ['USER']
+	local_name = os.environ['USER'].encode('utf-16-be')
 	
-	return struct.pack('!BB', msg_name, len(local_name)) + local_name
+	return struct.pack('!BI', msg_name, len(local_name)) + local_name
 
 def send(data):
 	server.sendto(data, (host, port))
@@ -284,7 +285,7 @@ def format_string_length(s):
 		'd': 8,
 	}
 	return sum(char_size[char] for char in s)
-				
+
 packets = 0
 def parse_package(data):
 	global packets
@@ -348,8 +349,21 @@ def parse_package(data):
 			print 'Discard outdated message'
 	elif header == msg_ping:
 		print 'pong'
+	elif header == msg_ship_info:
+		remaining = data[1:]
+		while len(remaining):
+			id_, r, g, b, name_len = struct.unpack('!BBBBI', remaining[:8])
+			end_of_name = 8 + name_len
+			name = remaining[8:end_of_name].decode('utf-16-be')
+			remaining = remaining[end_of_name:]
+			game.ship_info[id_] = {
+				'r': r,
+				'g': g,
+				'b': b,
+				'name': name,
+			}
 	else:
-		print 'Unknown header: %d' % header
+		print 'Unknown header: %d (msg: %s)' % (header, ' '.join('%02x' % ord(c) for c in data))
 
 def read_data():
 	try:
@@ -380,6 +394,8 @@ while not done:
 					game.fix_delta = not game.fix_delta
 				elif e.key == K_i:
 					game.show_info = not game.show_info
+				elif e.key == K_c:
+					game.ship_info = {}
 
 		if e.type == QUIT or (e.type == KEYDOWN and e.key == K_ESCAPE):
 			done = True

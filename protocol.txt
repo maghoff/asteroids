@@ -3,8 +3,8 @@ For all fields: Network byte order
 float: 32 bits IEEE 754
 
 string:
-    1 byte length of string in bytes, n
-    n bytes utf-8 encoded string
+    4 bytes length of string in bytes, n
+    n bytes string, utf-16 big endian encoded (utf-16-be in python / serialized QString in Qt)
 
 7 = game status (from server)
     4 byte timestamp
@@ -40,7 +40,7 @@ string:
     - 1 float dy
 
 
-59 = ship-info
+59 (0x3b) = ship-info
     any number of the following:
     1 byte id
     1 byte r
