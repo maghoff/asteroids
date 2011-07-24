@@ -90,6 +90,10 @@ class status_flags:
 
 ###
 
+def screen_coord(pos):
+	x, y = pos
+	return ((x + 320.) / 640. * screen_size[0], (1 - (y + 200) / 400.) * screen_size[1])
+
 def draw_text(text, pos, text_color, centered=False):
 	antialias_text = True
 	renederd_text = font.render(text, antialias_text, text_color)
@@ -98,16 +102,109 @@ def draw_text(text, pos, text_color, centered=False):
 
 	screen.blit(renederd_text, pos)
 
+def draw_ship(obj, dt, t):
+	engine_on = bool(obj['status'] & status_flags.engine)
+	pos_at_t0 = Vec2d(obj['x'], obj['y'])
+	ang_at_t0 = obj['ang']
+	vel_at_t0 = Vec2d(obj['dx'], obj['dy'])
+	dang      = obj['dang']
+	if 'id' in obj:
+		info  = game.ship_info.get(obj['id'], {})
+	else:
+		info  = None
+
+	def integrator_1():
+		pos = pos_at_t0 + vel_at_t0 * dt
+		ang = ang_at_t0 + dang * dt
+		return pos, ang
+
+	def integrator_2():
+		pos = pos_at_t0
+		ang = ang_at_t0
+		vel = vel_at_t0
+
+		if dt > 1000:
+			print 'Bailing out from integration -- too far ahead'
+			return pos, ang
+
+		for i in xrange(dt):
+			if engine_on:
+				vel += 0.001 * Vec2d(cos(ang), sin(ang))
+				speed = vel.get_length()
+				maxSpeed = 0.3
+				if speed > maxSpeed:
+					vel *= maxSpeed / speed
+
+			damp = 0.999
+			vel *= damp
+
+			pos += vel
+			ang += dang
+		
+		def bind(value, length):
+			return (length * 1.5 + value % length) % length - length / 2
+
+		bound_pos = Vec2d(
+			bind(pos[0], game.board_width),
+			bind(pos[1], game.board_height)
+		)
+
+		return bound_pos, ang
+
+
+	pos, ang = integrator_2()
+
+
+	space = (
+		Vec2d(-sin(ang), cos(ang)) * 3, # x axis / right
+		Vec2d( cos(ang), sin(ang)) * 3  # y axis / forward
+	)
+
+	if info is not None:
+		color = (info.get('r', 255), info.get('g', 255), info.get('b', 255))
+	else:
+		color = (obj['r'], obj['g'], obj['b'])
+
+	ship_shape  = [(0, 4), (2, -3), (0, -1), (-2, -3)]
+	burst_shape = [(0,-2), (1, -3), (0, -4), (-1, -3)]
+
+	ship_shape  = [(0, 4), (2, -2), (0, -1), (-2, -2)]
+	burst_shape = [(0,-1), (2, -2), (0, -3), (-2, -2)]
+
+	def draw_shape(shape, origo, space, color):
+		rebase = lambda x, y: (space[0][0] * x + space[1][0] * y, space[0][1] * x + space[1][1] * y)
+		pygame.draw.polygon(screen, color, [screen_coord(origo + rebase(x, y)) for x, y in shape])
+		#pygame.draw.aalines(screen, color, True, [origo + rebase(x, y) for x, y in shape])
+
+	draw_shape(ship_shape, pos, space, color)
+
+	if engine_on:
+		y = 255 * ((t / 300) % 2)
+		draw_shape(burst_shape, pos, space, (255,y,0))
+
+	if game.show_name and font and info is not None:
+		draw_text(info.get('name', '?'), screen_coord(pos) + Vec2d(0, 20), color, True)
+
+def draw_bullet(obj, dt, t):
+	pos_at_t0 = Vec2d(obj['x'], obj['y'])
+	vel_at_t0 = Vec2d(obj['dx'], obj['dy'])
+
+	pos = pos_at_t0 + vel_at_t0 * dt
+
+	pygame.draw.circle(screen, (255, 255, 255), screen_coord(pos), 2)
+
 def draw(t):
 	screen.fill((0, 0, 0))
-
-	def screen_coord(pos):
-		x, y = pos
-		return ((x + 320.) / 640. * screen_size[0], (1 - (y + 200) / 400.) * screen_size[1])
 
 	for x, y, lum in game.stars:
 		xs, ys = screen_coord((x, y))
 		screen.fill((lum, lum, lum), (xs, ys, 1, 1))
+
+	type_functions = {
+		7: (draw_ship,   ),
+		8: (draw_ship,   ),
+		9: (draw_bullet, ),
+	}
 
 	for obj in game.objects:
 		dt = t - game.t0
@@ -115,87 +212,10 @@ def draw(t):
 			print 'Time since t0 > 0! (dt = %d)' % dt
 			dt = 0
 
-		engine_on = bool(obj['status'] & status_flags.engine)
-		pos_at_t0 = Vec2d(obj['x'], obj['y'])
-		ang_at_t0 = obj['ang']
-		vel_at_t0 = Vec2d(obj['dx'], obj['dy'])
-		dang      = obj['dang']
-		if 'id' in obj:
-			info  = game.ship_info.get(obj['id'], {})
-		else:
-			info  = None
+		draw_func, = type_functions[obj['type']]
+		
+		draw_func(obj, dt, t)
 
-		def integrator_1():
-			pos = pos_at_t0 + vel_at_t0 * dt
-			ang = ang_at_t0 + dang * dt
-			return pos, ang
-
-		def integrator_2():
-			pos = pos_at_t0
-			ang = ang_at_t0
-			vel = vel_at_t0
-
-			if dt > 1000:
-				print 'Bailing out from integration -- too far ahead'
-				return pos, ang
-
-			for i in xrange(dt):
-				if engine_on:
-					vel += 0.001 * Vec2d(cos(ang), sin(ang))
-					speed = vel.get_length()
-					maxSpeed = 0.3
-					if speed > maxSpeed:
-						vel *= maxSpeed / speed
-
-				damp = 0.999
-				vel *= damp
-
-				pos += vel
-				ang += dang
-			
-			def bind(value, length):
-				return (length * 1.5 + value % length) % length - length / 2
-
-			bound_pos = Vec2d(
-				bind(pos[0], game.board_width),
-				bind(pos[1], game.board_height)
-			)
-
-			return bound_pos, ang
-
-
-		pos, ang = integrator_2()
-
-
-		space = (
-			Vec2d(-sin(ang), cos(ang)) * 3, # x axis / right
-			Vec2d( cos(ang), sin(ang)) * 3  # y axis / forward
-		)
-
-		if info is not None:
-			color = (info.get('r', 255), info.get('g', 255), info.get('b', 255))
-		else:
-			color = (obj['r'], obj['g'], obj['b'])
-
-		ship_shape  = [(0, 4), (2, -3), (0, -1), (-2, -3)]
-		burst_shape = [(0,-2), (1, -3), (0, -4), (-1, -3)]
-
-		ship_shape  = [(0, 4), (2, -2), (0, -1), (-2, -2)]
-		burst_shape = [(0,-1), (2, -2), (0, -3), (-2, -2)]
-
-		def draw_shape(shape, origo, space, color):
-			rebase = lambda x, y: (space[0][0] * x + space[1][0] * y, space[0][1] * x + space[1][1] * y)
-			pygame.draw.polygon(screen, color, [screen_coord(origo + rebase(x, y)) for x, y in shape])
-			#pygame.draw.aalines(screen, color, True, [origo + rebase(x, y) for x, y in shape])
-
-		draw_shape(ship_shape, pos, space, color)
-
-		if engine_on:
-			y = 255 * ((t / 300) % 2)
-			draw_shape(burst_shape, pos, space, (255,y,0))
-
-		if game.show_name and font and info is not None:
-			draw_text(info.get('name', '?'), screen_coord(pos) + Vec2d(0, 20), color, True)
 
 	def println(lines):
 		for i,text in enumerate(lines):
@@ -306,6 +326,7 @@ def parse_package(data):
 				game.time_delta = int(game.avg_delta) + 10
 
 			remaining = data[5:]
+
 			deserializer = {
 				7: ('BBBffffffB', ('r','g','b','x','dx','y','dy','ang','dang','status')),
 				8: (  'BffffffB', ('id',       'x','dx','y','dy','ang','dang','status')),
@@ -321,7 +342,7 @@ def parse_package(data):
 
 				substring_size = format_string_length(format_string)
 				values = struct.unpack('!' + format_string, remaining[:substring_size])
-				game.objects.append(dict(zip(keys, values)))
+				game.objects.append(dict(zip(keys, values) + [('type', obj_type)]))
 				remaining = remaining[substring_size:]
 		else:
 			print 'Discard outdated message'
