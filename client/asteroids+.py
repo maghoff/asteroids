@@ -62,27 +62,30 @@ print 'Server at %s:%d' % (host, port)
 ### globals
 
 class game:
-	objects = []
-	keystate = {}
+	objects   = []
+	keystate  = {}
+	ship_info = {}
+	seen_ids  = defaultdict(lambda: set())
+
 	t0 = 0
 	time_delta = float('inf')
-	min_delta = float('inf')
-	avg_delta = float('nan')
-	max_delta = 0
+	min_delta  = float('inf')
+	avg_delta  = float('nan')
 	base_delta = float('nan')
-	discard_messages = False
+	max_delta  = 0
+
 	stars = [((random.random() - 0.5) * screen_size[0],
 	          (random.random() - 0.5) * screen_size[1],
 	          255 * (random.random() ** 2.2)) for i in xrange(250)]
-	margin = 15
+
+	margin       = 15
 	board_width  = 640 + margin * 2
 	board_height = 400 + margin * 2
-	fix_delta = False
-	show_info = False
-	show_name = True
-	ship_info = {}
-	sound_on  = True
-	seen_ids  = defaultdict(lambda: set())
+
+	fix_delta    = False
+	show_info    = False
+	show_name    = True
+	sound_on     = True
 
 font = pygame.font.Font(None, 16) if pygame.font else None
 
@@ -178,8 +181,8 @@ def draw_ship(obj, dt, t):
 
 	def draw_shape(shape, origo, space, color):
 		rebase = lambda x, y: (space[0][0] * x + space[1][0] * y, space[0][1] * x + space[1][1] * y)
-		pygame.draw.polygon(screen, color, [screen_coord(origo + rebase(x, y)) for x, y in shape])
-		#pygame.draw.aalines(screen, color, True, [origo + rebase(x, y) for x, y in shape])
+		path = [screen_coord(origo + rebase(x, y)) for x, y in shape]
+		pygame.draw.polygon(screen, color, path)
 
 	draw_shape(ship_shape, pos, space, color)
 
@@ -319,8 +322,6 @@ def parse_package(data):
 	#	return
 
 	if header == msg_status:
-		#data_type, fmt, keys = package[header]
-		#values = struct.unpack(fmt)
 		timestamp = struct.unpack('!I', data[1:5])[0]
 		if timestamp >= game.t0:
 			game.t0 = timestamp
@@ -405,7 +406,6 @@ done = False
 loopcount = 0
 
 while not done:
-	#send(ping())
 	send(status())
 	if loopcount % 100 == 0:
 		send(name())
