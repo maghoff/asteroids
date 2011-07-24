@@ -139,10 +139,6 @@ def draw_ship(obj, dt, t):
 		for i in xrange(dt):
 			if engine_on:
 				vel += 0.001 * Vec2d(cos(ang), sin(ang))
-				speed = vel.get_length()
-				maxSpeed = 0.3
-				if speed > maxSpeed:
-					vel *= maxSpeed / speed
 
 			damp = 0.999
 			vel *= damp

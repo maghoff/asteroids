@@ -81,13 +81,6 @@ void Participant::step() {
 		const double acc = 0.001;
 		dx += acc * cos(ang);
 		dy += acc * sin(ang);
-
-		const double speed = sqrt(dx*dx + dy*dy);
-		const double maxSpeed = 0.3;
-		if (speed > maxSpeed) {
-			dx *= maxSpeed / speed;
-			dy *= maxSpeed / speed;
-		}
 	}
 
 	const bool gravity = false;
