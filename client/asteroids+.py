@@ -184,7 +184,7 @@ def draw_ship(obj, dt, t):
 		draw_shape(burst_shape, pos, space, (255,y,0))
 
 	if game.show_name and font and info is not None:
-		draw_text(info.get('name', '?'), screen_coord(pos) + Vec2d(0, 20), color, True)
+		draw_text(info.get('name', '?'), screen_coord(pos - Vec2d(0, 20)), color, True)
 
 def draw_bullet(obj, dt, t):
 	pos_at_t0 = Vec2d(obj['x'], obj['y'])
