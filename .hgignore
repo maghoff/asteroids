@@ -8,3 +8,7 @@ moc_*.cpp
 asteroids+.zip
 server/server
 server/Makefile
+server/server.app/*
+server/server.xcodeproj/*
+server/Info.plist
+server/build/*
