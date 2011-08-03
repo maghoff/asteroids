@@ -147,6 +147,7 @@ void Game::enterSuspend() {
 
 void Game::leaveSuspend() {
 	gameTime = QDateTime::currentDateTime();
+	gameTicks = gameTime.toMSecsSinceEpoch();
 	timer.start();
 	gcTimer.start();
 }
