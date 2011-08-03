@@ -18,15 +18,15 @@ Game::Game(QObject *parent) :
 
 	connect(&timer, SIGNAL(timeout()), this, SLOT(timerSlot()));
 	timer.setInterval(10);
-	timer.start();
 
 	connect(&gcTimer, SIGNAL(timeout()), this, SLOT(disconnectStaleClients()));
 	gcTimer.setInterval(1000);
-	gcTimer.start();
 
 	gameTime = QDateTime::currentDateTime();
 	gameTicks = 0;
 	nextSendShipInfo = 0;
+
+	qDebug() << "Engine is suspended";
 }
 
 Participant* Game::acquireParticipant(QHostAddress srcHost, quint16 srcPort) {
@@ -37,6 +37,11 @@ Participant* Game::acquireParticipant(QHostAddress srcHost, quint16 srcPort) {
 	QHash<QString, Participant*>::const_iterator i = p.find(id);
 	if (i == p.end()) {
 		qDebug() << id << ": New participant";
+
+		if (!timer.isActive()) {
+			qDebug() << "Taking engine out of suspend";
+			leaveSuspend();
+		}
 
 		i = p.insert(id, new Participant(this, srcHost, srcPort));
 	}
@@ -135,6 +140,17 @@ void Game::step() {
 
 }
 
+void Game::enterSuspend() {
+	timer.stop();
+	gcTimer.stop();
+}
+
+void Game::leaveSuspend() {
+	gameTime = QDateTime::currentDateTime();
+	timer.start();
+	gcTimer.start();
+}
+
 void Game::timerSlot() {
 	for (; gameTime < QDateTime::currentDateTime(); gameTime = gameTime.addMSecs(1)) {
 		step();
@@ -168,6 +184,11 @@ void Game::disconnectStaleClients() {
 		qDebug() << (*i) << "Kicking out stale client";
 		delete p.value(*i);
 		p.remove(*i);
+	}
+
+	if (p.size() == 0) {
+		qDebug() << "No clients connected; suspending engine";
+		enterSuspend();
 	}
 }
 

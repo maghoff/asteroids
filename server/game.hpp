@@ -31,6 +31,8 @@ class Game : public QObject {
 	void sendToAll(QByteArray& datagram);
 	void step();
 
+	void enterSuspend();
+	void leaveSuspend();
 
 public:
     explicit Game(QObject *parent = 0);
