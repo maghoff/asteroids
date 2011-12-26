@@ -33,6 +33,8 @@ public:
 
 	double get_x() const { return x; }
 	double get_y() const { return y; }
+	double get_dx() const { return dx; }
+	double get_dy() const { return dy; }
 	quint8 get_id() const { return id; }
 
 
