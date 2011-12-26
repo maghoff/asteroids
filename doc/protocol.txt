@@ -48,6 +48,13 @@ string:
     - 1 float y
     - 1 float dy
 
+    1 byte object type (explosion = 11)
+    - 1 word id
+    - 1 float x
+    - 1 float dx
+    - 1 float y
+    - 1 float dy
+
 
 59 (0x3b) = ship-info
     any number of the following:

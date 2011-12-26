@@ -8,7 +8,7 @@ import os
 import time
 import random
 from collections import defaultdict
-from math import sin, cos, isnan
+from math import sin, cos, isnan, pi
 from vec2d import Vec2d
 
 
@@ -90,6 +90,10 @@ class game:
 	sound_on     = True
 	arcade_style = True
 
+	# debug
+	fake_expl = {'type': 11, 'id':0, 'x':50, 'y':50, 'dx': 1, 'dy': 1}
+
+
 font = pygame.font.Font(None, 16) if pygame.font else None
 
 
@@ -103,7 +107,7 @@ class status_flags:
 
 def screen_coord(pos):
 	x, y = pos
-	return ((x + 320.) / 640. * screen_size[0], (1 - (y + 200) / 400.) * screen_size[1])
+	return (int((x + 320.) / 640. * screen_size[0]), int((1 - (y + 200) / 400.) * screen_size[1]))
 
 def draw_text(text, pos, text_color, centered=False):
 	antialias_text = True
@@ -202,9 +206,54 @@ def draw_bullet(obj, dt, t):
 	else:
 		pygame.draw.circle(screen, (255, 255, 255), screen_coord(pos), 2)
 
+explosions = {}
+
+def draw_explosion(obj, _, t):
+	if obj['id'] not in explosions:
+		x = obj['x']
+		y = obj['y']
+		dx = obj['dx']
+		dy = obj['dy']
+
+		lines = []
+
+		for line in xrange(0, 5+random.randint(0, 5)):
+			lines.append((
+				Vec2d(x, y),
+				Vec2d(dx+random.random()-0.5, dy+random.random()-0.5) * 0.7,
+				2*pi*random.random(), # rotation
+				(random.random()-0.5)*0.1,  # rotation speed
+				random.random()*6, -random.random()*6,
+				t # start time
+			))
+
+		explosions[obj['id']] = {
+			'start': t,
+			'lines': lines,
+		}
+
+	for startpos, vel, r, dr, a, b, t0 in explosions[obj['id']]['lines']:
+		dt = t - t0
+		line = Vec2d(cos(r + dr * dt), sin(r + dr * dt))
+
+		pos = startpos + vel * dt
+
+		for piece in a, b:
+			pygame.draw.line(
+				screen,
+				(194, 205, 0),
+				screen_coord(pos),
+				screen_coord(pos + piece * line)
+			)
+
 def sound_bullet(obj):
 	if game.sound_on:
 		sound  = pygame.mixer.Sound('pewpew.wav')
+		channel = sound.play()
+
+def sound_explode(obj):
+	if game.sound_on:
+		sound  = pygame.mixer.Sound('explode.wav')
 		channel = sound.play()
 
 def sound_spawn(obj):
@@ -221,6 +270,7 @@ type_functions = {
 	 8: (draw_ship,   sound_spawn),
 	 9: (draw_bullet, None),
 	10: (draw_bullet, sound_bullet),
+	11: (draw_explosion, sound_explode),
 }
 
 def draw(t):
@@ -356,9 +406,14 @@ def parse_package(data):
 				 8: (  'BffffffB', ('id',       'x','dx','y','dy','ang','dang','status')),
 				 9: (      'ffff', (            'x','dx','y','dy'                      )),
 				10: (     'Hffff', ('id',       'x','dx','y','dy'                      )),
+				11: (     'Hffff', ('id',       'x','dx','y','dy'                      )),
 			}
 
 			game.objects = []
+
+			if game.keystate.get(K_e, False):
+				game.objects.append(game.fake_expl)
+
 			while len(remaining):
 				obj_type = struct.unpack('!B', remaining[0])[0]
 				remaining = remaining[1:]
@@ -429,6 +484,8 @@ while not done:
 					game.sound_on = not game.sound_on
 				elif e.key == K_t:
 					game.arcade_style = not game.arcade_style
+				if e.key == K_e:
+					game.fake_expl['id'] += 1
 
 		if e.type == QUIT or (e.type == KEYDOWN and e.key == K_ESCAPE):
 			done = True
