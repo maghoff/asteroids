@@ -31,6 +31,11 @@ public:
 	void serializeShipInfo(QDataStream& ds);
 
 
+	double get_x() const { return x; }
+	double get_y() const { return y; }
+	quint8 get_id() const { return id; }
+
+
 private:
 	struct {
 		quint8 r, g, b;

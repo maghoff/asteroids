@@ -9,7 +9,8 @@ SOURCES += \
     participant.cpp \
     gameobject.cpp \
     bullet.cpp \
-    spacemath.cpp
+    spacemath.cpp \
+    explosion.cpp
 
 HEADERS += \
     connectionmanager.hpp \
@@ -17,4 +18,7 @@ HEADERS += \
     participant.hpp \
     gameobject.hpp \
     bullet.hpp \
-    spacemath.hpp
+    spacemath.hpp \
+    explosion.hpp
+
+

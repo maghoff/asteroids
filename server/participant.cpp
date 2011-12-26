@@ -106,7 +106,7 @@ void Participant::step() {
 	} else if (is_firing) {
 		double bdx = cos(ang) * 1;
 		double bdy = sin(ang) * 1;
-		game()->add(new Bullet(game(), x, y, bdx + dx, bdy + dy));
+		game()->add(new Bullet(game(), x, y, bdx + dx, bdy + dy, id));
 		weapon_cooldown = 500;
 	}
 }

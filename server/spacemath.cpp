@@ -14,3 +14,8 @@ void cropToSpace(double &x, double &y) {
 
 }
 
+static double sqr(double x) { return x*x; }
+
+double dist(double x1, double y1, double x2, double y2) {
+	return sqrt(sqr(x1 - x2) + sqr(y1 - y2));
+}

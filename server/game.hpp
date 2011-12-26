@@ -21,8 +21,10 @@ class Game : public QObject {
 	quint32 nextSendShipInfo;
 
 	QUdpSocket s;
+public:
 	QHash<QString, Participant*> p;
-    QList<GameObject*> go;
+private:
+	QList<GameObject*> go;
 
 	Participant* acquireParticipant(QHostAddress srcHost, quint16 port);
 

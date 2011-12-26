@@ -13,7 +13,7 @@ class Bullet : public GameObject {
 
 public:
 
-	explicit Bullet(Game *parent, double x, double y, double dx, double dy);
+	Bullet(Game *parent, double x, double y, double dx, double dy, quint8 playerId);
 
 	virtual void step();
 
@@ -23,6 +23,7 @@ private:
     double x, y, dx, dy;
     int timeToLive;
 	quint16 id;
+	quint8 playerId;
 
     Game *game();
 
