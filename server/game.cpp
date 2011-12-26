@@ -143,6 +143,7 @@ void Game::step() {
 void Game::enterSuspend() {
 	timer.stop();
 	gcTimer.stop();
+	engineSuspended();
 }
 
 void Game::leaveSuspend() {

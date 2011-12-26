@@ -41,8 +41,7 @@ public:
     void remove(GameObject *o);
 
 signals:
-
-public slots:
+	void engineSuspended();
 
 private slots:
 	void incoming();

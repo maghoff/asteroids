@@ -100,15 +100,15 @@ void Participant::step() {
     cropToSpace(x, y);
 
 	ang = fmod(ang, 2. * M_PI);
-        	
-    if (weapon_cooldown > 0) {
-    	weapon_cooldown--;
-    } else if (is_firing) {
-        double bdx = cos(ang) * 1;
-        double bdy = sin(ang) * 1;
-        game()->add(new Bullet(game(), x, y, bdx + dx, bdy + dy));
-    	weapon_cooldown = 500;
-    }
+
+	if (weapon_cooldown > 0) {
+		weapon_cooldown--;
+	} else if (is_firing) {
+		double bdx = cos(ang) * 1;
+		double bdy = sin(ang) * 1;
+		game()->add(new Bullet(game(), x, y, bdx + dx, bdy + dy));
+		weapon_cooldown = 500;
+	}
 }
 
 const quint8 OBJ_SHIP = 0x08;
