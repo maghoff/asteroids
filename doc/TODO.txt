@@ -6,6 +6,9 @@
  - asteroid
 - asteroids
 - items
+- discover servers
+ - central directory
+ - bonjour for local network
 
 -----
 
