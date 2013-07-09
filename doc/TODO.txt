@@ -13,4 +13,7 @@
 -----
 
 - micro-VM for sending algos over the network
+- store server data in a crash proof way
+ - [UnQLite - An Embeddable NoSQL Database Engine](http://unqlite.org/) (via [HN](https://news.ycombinator.com/item?id=6003757))
+ - [Embedded JSON Database engine](http://ejdb.org/) [HN](https://news.ycombinator.com/item?id=6004420))
 
